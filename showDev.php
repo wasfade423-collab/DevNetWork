@@ -13,21 +13,21 @@
     if (is_string($dev)) {
         echo "<p>" . $dev . "</p>";
     } else { ?>
-        <div>
+    <div>
 
-            <?= $dev["nom"] ?>
-            <?= $dev["prenom"] ?>
-            <?= $dev["type"] ?>
-            <?= $dev["anneeDexerience"] ?>
-            <?= $dev["niveau"] ?>
-            <?php print_r($dev["technos"]) ?>
+        <?= $dev["nom"] ?>
+        <?= $dev["prenom"] ?>
+        <?= $dev["type"] ?>
+        <?= $dev["anneeDexerience"] ?>
+        <?= $dev["niveau"] ?>
+        <?php print_r($dev["technos"]) ?>
 
-        </div>
+    </div>
 
     <?php } ?>
 
 
-    <a href="index.php?action='home'">
+    <a href="index.php?action=home">
         <button>
             Retour l'acceuil
         </button>

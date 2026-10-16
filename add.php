@@ -42,8 +42,8 @@
 
 
         <input type="submit" value='<?= $value = isset($id) ? 'Modifier' : 'Ajouter' ?>'>
-        <a href="index.php?action='home'">
-            <button>
+        <a href="index.php?action=home">
+            <button type="button">
                 Retour l'acceuil
             </button>
         </a>
