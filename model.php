@@ -1,137 +1,94 @@
 <?php
-require_once 'db.php';
+
+require_once __DIR__ . '/db.php';
+
 class Model
 {
-
-    private $db;
-    private $connection;
+    private MongoDB\Collection $collection;
 
     public function __construct()
     {
-        $this->db = new Database();
-        $this->connection = $this->db->getConnection();
+        $this->collection = (new Database())->getConnection();
     }
 
-    private function testConnection()
+    public function getAllDevs(): array
     {
-        if (str_contains($this->connection, "Erreur lors de la connection")) {
+        $documents = $this->collection->find();
+        $devs = array_map(
+            fn ($document): array => $this->normalizeDev($document->getArrayCopy()),
+            $documents->toArray()
+        );
+
+        usort($devs, static fn (array $left, array $right): int => strnatcasecmp(
+            trim(($left['prenom'] ?? '') . ' ' . ($left['nom'] ?? '')),
+            trim(($right['prenom'] ?? '') . ' ' . ($right['nom'] ?? ''))
+        ));
+
+        return $devs;
+    }
+
+    public function getDevById(string $id): ?array
+    {
+        if (preg_match('/^[a-f\d]{24}$/i', $id) !== 1) {
+            return null;
+        }
+
+        $document = $this->collection->findOne(['_id' => new MongoDB\BSON\ObjectId($id)]);
+
+        return $document === null ? null : $this->normalizeDev($document->getArrayCopy());
+    }
+
+    public function addDev(array $dev): void
+    {
+        $this->collection->insertOne($dev);
+    }
+
+    public function deleteDev(string $id): bool
+    {
+        if (preg_match('/^[a-f\d]{24}$/i', $id) !== 1) {
             return false;
         }
-        return true;
+
+        return $this->collection->deleteOne(['_id' => new MongoDB\BSON\ObjectId($id)])->getDeletedCount() > 0;
     }
-    function getAlldevs()
+
+    public function updateDev(string $id, array $updateDev): bool
     {
-        if (!$this->testConnection()) {
-            echo $this->connection;
-            return;
+        if (preg_match('/^[a-f\d]{24}$/i', $id) !== 1) {
+            return false;
         }
 
-        $devs = $this->connection->find();
-        $aptDevs = [];
-        if (
-            $devs == null
-        ) {
-            return $aptDevs = "Aucun dev trouvé pour le moment.";
-        } else {
+        $result = $this->collection->updateOne(
+            ['_id' => new MongoDB\BSON\ObjectId($id)],
+            ['$set' => $updateDev]
+        );
 
-            $devs = $devs->toArray();
+        return $result->getMatchedCount() > 0;
+    }
 
-            foreach ($devs as $dev) {
-                $aptDev = $dev->getArrayCopy();
-                $aptDev["_id"] = (string) $aptDev["_id"];
-                $aptDev["technos"] = $aptDev["technos"]->getArrayCopy();
+    private function normalizeDev(array $dev): array
+    {
+        $dev['_id'] = (string) $dev['_id'];
 
-                $aptDevs[] = $aptDev;
+        foreach ([
+            'prenom' => 'firstname',
+            'nom' => 'lastname',
+            'niveau' => 'level',
+        ] as $field => $legacyField) {
+            if (!array_key_exists($field, $dev) && array_key_exists($legacyField, $dev)) {
+                $dev[$field] = $dev[$legacyField];
             }
-
-            return $aptDevs;
         }
-    }
-
-    function getDevById($id)
-    {
-        if (!$this->testConnection()) {
-            echo $this->connection;
-            return;
+        if (!array_key_exists('anneeDexperience', $dev)) {
+            $dev['anneeDexperience'] = $dev['anneeDexerience'] ?? $dev['xp'] ?? 0;
         }
 
-        $dev = $this->connection->findOne(["_id" => new MongoDB\BSON\ObjectId($id)]);
-        if ($dev == null) {
-            return $dev = "Dev non trouvé avec l'id: " . $id;
-        } else {
-            $dev = $dev->getArrayCopy();
-            $dev["_id"] = (string) $dev["_id"];
-            $dev["technos"] = $dev["technos"]->getArrayCopy();
-
-            return $dev;
+        $technos = $dev['technos'] ?? [];
+        if ($technos instanceof Traversable) {
+            $technos = iterator_to_array($technos, false);
         }
-    }
+        $dev['technos'] = is_array($technos) ? array_values($technos) : [];
 
-    function addDev($dev)
-    {
-        if (!$this->testConnection()) {
-            echo $this->connection;
-            return;
-        }
-
-        if ($this->connection->insertOne($dev)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function deleteDev($devId)
-    {
-        if (!$this->testConnection()) {
-            echo $this->connection;
-            return;
-        }
-        $request = $this->connection->deleteOne(["_id" => new MongoDB\BSON\ObjectId($devId)]);
-        if ($request) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    function updateDev($devId, $updateDev)
-    {
-        if (!$this->testConnection()) {
-            echo $this->connection;
-            return;
-        }
-
-        $request = $this->connection->updateOne(['_id' => new MongoDB\BSON\ObjectId($devId)], $updateDev);
-
-        if ($request) {
-            return true;
-        } else {
-            return false;
-        }
+        return $dev;
     }
 }
-// $control = new Model();
-
-
-
-// $dev = [
-//     "nom" => 'Wasfade',
-//     "prenom" => 'Tonoukoin',
-//     "type" => 'Fullstack',
-//     "xp" => 2,
-//     "level" => 'Junior',
-//     "technos" => [
-//         "html",
-//         "css",
-//         "JavaScript",
-//         "Angular",
-//         "Tailwindcss",
-//         "Php",
-//         "Laravel",
-//         "MySQL",
-//         "MongoDB",
-//         "PostgreeSQL"
-//     ]
-// ];
-// echo $control->updateDev('6ac6a8068390659c61b94599', $dev);

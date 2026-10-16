@@ -1,14 +1,18 @@
 <?php
-require 'vendor/autoload.php';
+
+require_once __DIR__ . '/vendor/autoload.php';
+
 class Database
 {
-    function getConnection()
+    public function getConnection(): MongoDB\Collection
     {
         try {
-            $client = new MongoDB\Client("mongodb://localhost:27017");
-            return $client->baseFormation1->devs;
-        } catch (Exception $e) {
-            return "Erreur lors de la connection " . $e->getMessage();
+            $client = new MongoDB\Client('mongodb://localhost:27017');
+
+            return $client->selectCollection('baseFormation1', 'devs');
+        } catch (Throwable $exception) {
+            error_log($exception->__toString());
+            throw new RuntimeException('Impossible de se connecter à MongoDB.', 0, $exception);
         }
     }
 }
