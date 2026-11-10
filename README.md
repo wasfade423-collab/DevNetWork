@@ -5,6 +5,7 @@ DevNetwork est une petite application PHP qui réunit les profils de développeu
 ## Fonctionnalités
 
 - Annuaire responsive avec recherche instantanée et statistiques.
+- Thème clair ou sombre, mémorisé dans le navigateur.
 - Fiche détaillée pour chaque développeur.
 - Création, modification et suppression de profils.
 - Gestion de spécialités et de technologies personnalisées.

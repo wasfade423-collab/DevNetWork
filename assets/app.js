@@ -1,4 +1,46 @@
+const themeStorageKey = 'devnetwork-theme';
+const rootElement = document.documentElement;
+
+try {
+    const savedTheme = window.localStorage.getItem(themeStorageKey);
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+        rootElement.dataset.theme = savedTheme;
+    }
+} catch (error) {
+    console.warn('Le thème enregistré n’a pas pu être chargé.', error);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    const themeToggle = document.querySelector('#theme-toggle');
+    const themeToggleIcon = themeToggle?.querySelector('.theme-toggle-icon');
+    const themeToggleLabel = themeToggle?.querySelector('.theme-toggle-label');
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+
+    const updateThemeToggle = () => {
+        const isDark = rootElement.dataset.theme === 'dark';
+        if (themeToggle) {
+            themeToggle.setAttribute('aria-pressed', String(isDark));
+            themeToggle.setAttribute('aria-label', `Activer le thème ${isDark ? 'clair' : 'sombre'}`);
+        }
+        if (themeToggleIcon) themeToggleIcon.textContent = isDark ? '☀' : '☾';
+        if (themeToggleLabel) themeToggleLabel.textContent = isDark ? 'Mode clair' : 'Mode sombre';
+        if (themeColor) themeColor.content = isDark ? '#111827' : '#111b31';
+    };
+
+    if (themeToggle) {
+        updateThemeToggle();
+        themeToggle.addEventListener('click', () => {
+            const nextTheme = rootElement.dataset.theme === 'dark' ? 'light' : 'dark';
+            rootElement.dataset.theme = nextTheme;
+            updateThemeToggle();
+            try {
+                window.localStorage.setItem(themeStorageKey, nextTheme);
+            } catch (error) {
+                console.warn('Le thème choisi n’a pas pu être enregistré.', error);
+            }
+        });
+    }
+
     const searchInput = document.querySelector('#developer-search');
     const cards = [...document.querySelectorAll('[data-developer-card]')];
     const emptySearchState = document.querySelector('#search-empty');

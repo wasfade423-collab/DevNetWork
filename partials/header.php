@@ -22,6 +22,10 @@ $pageTitle = $pageTitle ?? 'DevNetwork';
             <nav class="main-nav" aria-label="Navigation principale">
                 <a href="index.php?action=home">Annuaire</a>
                 <a class="nav-cta" href="index.php?action=formAdd"><span aria-hidden="true">＋</span> Ajouter un profil</a>
+                <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Activer le thème sombre" aria-pressed="false">
+                    <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+                    <span class="theme-toggle-label">Mode sombre</span>
+                </button>
             </nav>
         </div>
     </header>
